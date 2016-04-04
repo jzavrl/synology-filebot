@@ -21,26 +21,35 @@ sf-init() {
 	# Loop over our input folder to get the first level folders
 	for i in "$input"/*
 	do
+		# Set path and directory variables
+		path=$i
+		folder=$(basename $path)
+
 		# Call our rename and move script with the path
-		sf-move $i
+		sf-move $folder
+
+		# Get missing subtitles
+		sf-subtitles $folder
+
+		# Delete the old downloaded files once completed
+		sf-cleanup $folder
 	done
+
+	exit 0
 }
 
 # Moves the movie or TV show and renames it properly
 sf-move() {
-	path=$1
-	folder=$(basename $path)
-
-	echo "$input/$folder/*"
+	folder=$1
 
 	# Check if we have a series folder
 	if [ $folder == "Series" ]
 	then
 		# Filebot command for series
-		filebot -rename $input/$folder/* --format "$output/$folder/{n}/Season {s}/{n} - {s00e00} - {t}" --db TheTVDB --action copy
+		filebot -rename $input/$folder/* --format "$output/$folder/{n}/Season {s}/{n} - {s00e00} - {t}" --db TheTVDB
 	else
 		# Filebot command for movies
-		filebot -rename $input/$folder/* --format "$output/$folder/{n}/{n} - ({y})" --db TheMovieDB --action copy
+		filebot -rename $input/$folder/* --format "$output/$folder/{n}/{n} - ({y})" --db TheMovieDB
 	fi
 
 	# Delete all files that are below 100M so we remain with only video files
@@ -49,14 +58,28 @@ sf-move() {
 
 # Downloads the subtitles for the movie or TV show
 sf-subtitles() {
+	folder=$1
+	media=$output/$folder/*
 
-	exit 0
+	# Check if we have a series folder
+	if [ $folder == "Series" ]
+	then
+		media=$output/$folder/*/*
+	fi
+
+	# Download the subtitles in specified folder
+	filebot -get-missing-subtitles $media -non-strict
+
+	# Cleanup the subtitle name
+	filebot -script fn:replace --def "e=.eng.srt" "r=.srt" $media
 }
 
 # Deletes the old remaining files and folders
 sf-cleanup() {
+	folder=$1
 
-	exit 0
+	# Cleanup leftover files
+	filebot -script fn:cleaner $input/$folder
 }
 
 # Loop to read options and arguments.
