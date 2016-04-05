@@ -13,8 +13,8 @@ exit 0
 }
 
 # Define global variables
-input="/Users/JanZavrl/Development/Temp/Downloads"
-output="/Users/JanZavrl/Development/Temp/Videos"
+input="/volume1/Downloads"
+output="/volume1/Video"
 
 # Scan the folders to find new files
 sf-init() {
