@@ -7,7 +7,16 @@
 # Show help information about the script
 sf-help() {
 cat <<"USAGE"
-Write help text
+This script will automatically rename and move movies and TV series from the download folder to the designated folder. Download subtitles afterwards and cleanup any remaining files and folders from the download folder.
+
+Usage: synology-filebot
+
+	-h, --help        Show this help screen
+
+Examples:
+
+	synology-filebot
+	synology-filebot --help
 USAGE
 exit 0
 }
@@ -42,18 +51,18 @@ sf-init() {
 sf-move() {
 	folder=$1
 
+	# Delete all files that are below 100M so we remain with only video files
+	find $input/$folder -type f ! -size +100M -delete
+
 	# Check if we have a series folder
 	if [ $folder == "Series" ]
 	then
 		# Filebot command for series
-		filebot -rename $input/$folder/* --format "$output/$folder/{n}/Season {s}/{n} - {s00e00} - {t}" --db TheTVDB
+		filebot -rename $input/$folder/* --format "$output/$folder/{n}/Season {s}/{n} - {s00e00} - {t}" --db TheTVDB -non-strict
 	else
 		# Filebot command for movies
-		filebot -rename $input/$folder/* --format "$output/$folder/{n}/{n} - ({y})" --db TheMovieDB
+		filebot -rename $input/$folder/* --format "$output/$folder/{n}/{n} - ({y})" --db TheMovieDB -non-strict
 	fi
-
-	# Delete all files that are below 100M so we remain with only video files
-	find $output/$folder -type f ! -size +100M -delete
 }
 
 # Downloads the subtitles for the movie or TV show
@@ -82,12 +91,15 @@ sf-cleanup() {
 	filebot -script fn:cleaner $input/$folder
 }
 
-# Loop to read options and arguments.
-while [ $1 ]; do
-	case "$1" in
-		'-s')
-			sf-init
-			;;
-	esac
-	shift
-done
+# Check if we have arguments
+if [ ! -z $1 ]
+then
+	if [ $1 == "--help" ] || [ $1 == "-h" ]
+	then
+		sf-help
+	else
+		sf-help
+	fi
+else
+	sf-init
+fi
