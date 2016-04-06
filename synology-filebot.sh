@@ -38,7 +38,7 @@ sf-init() {
 		sf-move $folder
 
 		# Get missing subtitles
-		sf-subtitles
+		sf-subtitles $folder
 
 		# Delete the old downloaded files once completed
 		sf-cleanup $folder
@@ -67,11 +67,13 @@ sf-move() {
 
 # Downloads the subtitles for the movie or TV show
 sf-subtitles() {
+	folder=$1
+
 	# Download the subtitles in output folder
-	filebot -script fn:suball $output -non-strict --def maxAgeDays=1
+	filebot -script fn:suball $output/$folder -non-strict --def maxAgeDays=1
 
 	# Cleanup the subtitle name
-	filebot -script fn:replace --def "e=.eng.srt" "r=.srt" $output
+	filebot -script fn:replace --def "e=.eng.srt" "r=.srt" $output/$folder
 }
 
 # Deletes the old remaining files and folders
